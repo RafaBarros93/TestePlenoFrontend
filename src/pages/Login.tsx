@@ -1,19 +1,56 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
+import axios from "axios"; // Importe o Axios
+import { useToast } from "../components/Toast"; // Importe o Toast
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const { mostrarToast } = useToast(); // Hook de Toast
   const navigate = useNavigate();
 
   const handleRegisterClick = () => {
     navigate("/register"); // Redireciona para a rota "/register"
   };
 
-  const handleRegisterHome = () => {
-    navigate("/home"); // Redireciona para a rota "/home"
+  const handleLogin = async () => {
+    try {
+      // Fazendo a requisição de login
+      const response = await axios.post("http://localhost:3000/api/login", {
+        email,
+        password,
+      });
+
+      if (response.status === 200) {
+        // Exibe o toast de sucesso
+        mostrarToast({
+          tipo: "sucesso",
+          mensagem: response.data.message,
+          posicao: "top-right",
+          duracao: 2000,
+        });
+
+        // Redireciona para a página de home após login
+        navigate("/home");
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        mostrarToast({
+          tipo: "erro",
+          mensagem:
+            error.response?.data.message || "Erro ao logar com o usuário.",
+          duracao: 8000,
+        });
+      } else {
+        mostrarToast({
+          tipo: "erro",
+          mensagem: "Erro desconhecido ao enviar formulário.",
+          duracao: 8000,
+        });
+      }
+    }
   };
 
   return (
@@ -24,7 +61,7 @@ export default function Login() {
         className="mx-auto mb-8 w-32 h-32" // Ajuste o tamanho conforme necessário
       />
 
-      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+      <div className="bg-[#021A30] p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-white text-center text-2xl font-semibold mb-6">
           Login
         </h2>
@@ -48,7 +85,7 @@ export default function Login() {
         </div>
         <button
           className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded text-lg font-semibold"
-          onClick={handleRegisterHome}
+          onClick={handleLogin} // Chama a função de login
         >
           Entrar
         </button>
@@ -57,7 +94,7 @@ export default function Login() {
         </p>
         <button
           className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 rounded mt-2"
-          onClick={handleRegisterClick}
+          onClick={handleRegisterClick} // Redireciona para o registro
         >
           Cadastre-se
         </button>

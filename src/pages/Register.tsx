@@ -2,6 +2,8 @@ import { useState } from "react";
 import logo from "../assets/logo.png";
 import Button from "../components/Button";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../components/Toast";
+import axios from "axios"; // Importe o Axios
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -14,10 +16,11 @@ export default function Register() {
     role: "",
   });
 
+  const { mostrarToast } = useToast();
   const navigate = useNavigate();
 
   const handleRegisterHome = () => {
-    navigate("/login"); // Redireciona para a rota "/login"
+    navigate("/login");
   };
 
   const handleChange = (
@@ -28,14 +31,54 @@ export default function Register() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleSubmit = async () => {
+    try {
+      const data = {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        confirmPassword: form.confirmPassword,
+        bio: form.bio,
+        contact: form.contact,
+        role: form.role,
+      };
+
+      const response = await axios.post(
+        "http://localhost:3000/api/registrar/usuario",
+        data
+      );
+
+      if (response.status === 200) {
+        mostrarToast({
+          tipo: "sucesso",
+          mensagem: response.data.message,
+          posicao: "top-right",
+          duracao: 5000,
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        mostrarToast({
+          tipo: "erro",
+          mensagem:
+            error.response?.data.message || "Erro ao registrar o usuário.",
+          duracao: 8000,
+        });
+      } else {
+        mostrarToast({
+          tipo: "erro",
+          mensagem: "Erro desconhecido ao enviar formulário.",
+          duracao: 8000,
+        });
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
       <div className="w-full max-w-md flex justify-between items-center mb-8">
-        <img
-          src={logo}
-          alt="Logo"
-          className="" // Ajuste o tamanho conforme necessário
-        />
+        <img src={logo} alt="Logo" />
         <Button onClick={handleRegisterHome}>Sair</Button>
       </div>
 
@@ -100,7 +143,10 @@ export default function Register() {
           <option value="fullstack">Desenvolvedor Full-Stack</option>
         </select>
 
-        <button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded text-lg font-semibold">
+        <button
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded text-lg font-semibold"
+          onClick={handleSubmit}
+        >
           Cadastrar
         </button>
       </div>
